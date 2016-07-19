@@ -1,5 +1,6 @@
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileWriter;
 import javax.imageio.ImageIO;
 import java.util.List;
 
@@ -22,18 +23,9 @@ public class App {
         }
         String url = args[0];
         WebDriver driver = new FirefoxDriver();
-        App app = new App(driver, "images");
         driver.get(url);
-        Thread.sleep(3000);
-        ((JavascriptExecutor) driver).executeScript(
-            "document.querySelector('#viewerContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
-            "document.querySelector('#mainContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
-            "document.querySelector('#outerContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
-            "document.querySelector('body').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
-            "document.querySelector('html').style.height = document.querySelector('#viewer').offsetHeight + 'px';");
-        Thread.sleep(3000);
-
-        app.generate_screenshots();
+        App app = new App(driver, "images");
+        app.generate_beamer();
     }
 
     private WebDriver driver;
@@ -44,14 +36,52 @@ public class App {
         this.folder = folder;
     }
 
-    public void generate_screenshots () throws Exception {
+    public void generate_beamer () throws Exception {
+        File beamer_file = new File("apresentacao.tex");
+        if (beamer_file.exists()) {
+            System.out.println("a file already exists as apresentacao.tex...");
+            return ;
+        }
+
+        Thread.sleep(3000);
+        ((JavascriptExecutor) driver).executeScript(
+            "document.querySelector('#viewerContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('#mainContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('#outerContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('body').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('html').style.height = document.querySelector('#viewer').offsetHeight + 'px';");
+        Thread.sleep(3000);
+
+        FileWriter writer = new FileWriter(beamer_file);
+
+        writer.write("\\documentclass[aspectratio=43]{beamer}\n");
+        writer.write("\\usepackage[utf8]{inputenc}\n");
+        writer.write("\\usepackage[T1]{fontenc}\n");
+        writer.write("\\usepackage[brazil]{babel}\n");
+        writer.write("\\usetheme{default}\n");
+        writer.write("\\usecolortheme{default}\n");
+        writer.write("\\usefonttheme{default}\n");
+        writer.write("\\title[\\sc{Texto no rodap\\'e}]{Modelo do Beamer - Digite o titulo}\n");
+        writer.write("\\author[digite seu Nome]{digite seu Nome}\n");
+        writer.write("\\institute{nome do instituto}\n");
+        writer.write("\\date{\\today}\n");
+        writer.write("\\begin{document}\n");
+        this.generate_screenshots(writer);
+        writer.write("\\end{document}\n");
+        writer.close();
+    }
+
+    private void generate_screenshots (FileWriter writer) throws Exception {
         File screenshot = ((TakesScreenshot) this.driver).getScreenshotAs(OutputType.FILE);
-        List <WebElement> slides = this.driver.findElements(By.cssSelector("div.page"));
+        List <WebElement> slides = this.driver.findElements(By.cssSelector("div.page .canvasWrapper"));
         File images_folder = new File(this.folder);
         if (!images_folder.exists())
             images_folder.mkdir();
         for (int i = 0; i < slides.size(); i++) {
             this.save_target_screenshot(screenshot, slides.get(i), i);
+            writer.write("\\begin{frame}\n");
+            writer.write("    \\includegraphics[width=1\\columnwidth]{images/" + i + ".png}\n");
+            writer.write("\\end{frame}\n");
         }
     }
 
