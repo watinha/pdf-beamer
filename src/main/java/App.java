@@ -22,7 +22,7 @@ public class App {
         }
         String url = args[0];
         WebDriver driver = new FirefoxDriver();
-        App app = new App(driver);
+        App app = new App(driver, "images");
         driver.get(url);
         Thread.sleep(3000);
         ((JavascriptExecutor) driver).executeScript(
@@ -37,17 +37,20 @@ public class App {
     }
 
     private WebDriver driver;
+    private String folder;
 
-    public App (WebDriver driver) {
+    public App (WebDriver driver, String folder) {
         this.driver = driver;
+        this.folder = folder;
     }
 
     public void generate_screenshots () throws Exception {
         File screenshot = ((TakesScreenshot) this.driver).getScreenshotAs(OutputType.FILE);
         List <WebElement> slides = this.driver.findElements(By.cssSelector("div.page"));
-        System.out.println(slides.size());
+        File images_folder = new File(this.folder);
+        if (!images_folder.exists())
+            images_folder.mkdir();
         for (int i = 0; i < slides.size(); i++) {
-            System.out.println(i);
             this.save_target_screenshot(screenshot, slides.get(i), i);
         }
     }
@@ -79,7 +82,7 @@ public class App {
                 left, top,
                 (width <= 0 ? 1 : width),
                 (height <= 0 ? 1 : height));
-        File file = new File("./" + slide_index + ".png");
+        File file = new File(this.folder + "/" + slide_index + ".png");
         ImageIO.write(sub_image, "png", file);
     }
 }
