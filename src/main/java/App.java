@@ -7,6 +7,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.TakesScreenshot;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -23,7 +24,14 @@ public class App {
         WebDriver driver = new FirefoxDriver();
         App app = new App(driver);
         driver.get(url);
-        Thread.sleep(10000);
+        Thread.sleep(3000);
+        ((JavascriptExecutor) driver).executeScript(
+            "document.querySelector('#viewerContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('#mainContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('#outerContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('body').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
+            "document.querySelector('html').style.height = document.querySelector('#viewer').offsetHeight + 'px';");
+        Thread.sleep(3000);
 
         app.generate_screenshots();
     }
