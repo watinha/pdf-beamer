@@ -1,2 +1,2 @@
 #!/bin/sh
-java -jar pdf-beamer.jar $1
+java -jar $HOME/workspace/pdf-beamer/pdf-beamer.jar $1

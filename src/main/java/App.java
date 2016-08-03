@@ -15,6 +15,10 @@ import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.OutputType;
 
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
+
 
 public class App {
     public static void main (String[] args) throws Exception {
@@ -30,6 +34,7 @@ public class App {
         driver.get(url);
         App app = new App(driver, "images");
         app.generate_beamer();
+        driver.quit();
     }
 
     private WebDriver driver;
@@ -54,7 +59,7 @@ public class App {
             "document.querySelector('#outerContainer').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
             "document.querySelector('body').style.height = document.querySelector('#viewer').offsetHeight + 'px';" +
             "document.querySelector('html').style.height = document.querySelector('#viewer').offsetHeight + 'px';");
-        Thread.sleep(3000);
+        Thread.sleep(10000);
 
         FileWriter writer = new FileWriter(beamer_file);
 
@@ -76,22 +81,23 @@ public class App {
     }
 
     private void generate_screenshots (FileWriter writer) throws Exception {
-        File screenshot = ((TakesScreenshot) this.driver).getScreenshotAs(OutputType.FILE);
+        Screenshot ashot_screenshot = new AShot().shootingStrategy(
+                ShootingStrategies.viewportPasting(500)).takeScreenshot(this.driver);
+        BufferedImage full_image = ashot_screenshot.getImage();
         List <WebElement> slides = this.driver.findElements(By.cssSelector("div.page .canvasWrapper"));
         File images_folder = new File(this.folder);
         if (!images_folder.exists())
             images_folder.mkdir();
         for (int i = 0; i < slides.size(); i++) {
-            this.save_target_screenshot(screenshot, slides.get(i), i);
+            this.save_target_screenshot(full_image, slides.get(i), i);
             writer.write("\\begin{frame}\n");
             writer.write("    \\includegraphics[width=1\\columnwidth]{images/" + i + ".png}\n");
             writer.write("\\end{frame}\n");
         }
     }
 
-    public void save_target_screenshot (File screenshot, WebElement target, int slide_index) throws Exception {
-        BufferedImage full_image = ImageIO.read(screenshot),
-                      sub_image = null;
+    public void save_target_screenshot (BufferedImage full_image, WebElement target, int slide_index) throws Exception {
+        BufferedImage sub_image = null;
         int left = target.getLocation().getX(),
             top = target.getLocation().getY(),
             height = target.getSize().getHeight(),
