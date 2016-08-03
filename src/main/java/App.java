@@ -12,6 +12,7 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.OutputType;
 
 
@@ -22,7 +23,10 @@ public class App {
             return ;
         }
         String url = args[0];
-        WebDriver driver = new FirefoxDriver();
+
+        DesiredCapabilities capabilities = DesiredCapabilities.firefox();
+        capabilities.setCapability("marionette", true);
+        WebDriver driver = new FirefoxDriver(capabilities);
         driver.get(url);
         App app = new App(driver, "images");
         app.generate_beamer();
